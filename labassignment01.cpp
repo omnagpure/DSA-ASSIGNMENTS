@@ -119,7 +119,7 @@ int partition(Student students[], int low, int high){
     for (int j = low; j < high; j++){
         if (students[j].SGPA < pivot.SGPA){
             i++;
-            Student temp1 = students[i];15
+            Student temp1 = students[i];
             students[i] = students[j];
             students[j] = temp1;
         }
