@@ -1,0 +1,166 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+struct GuestDetails {
+    string name;
+    string checkIn;
+    string checkOut;
+    string idProof;
+    int age;
+    string gender;
+};
+
+struct RoomNode {
+    int roomNumber;
+    GuestDetails* guestDetails;
+    RoomNode* left;
+    RoomNode* right;
+
+    RoomNode(int number) : roomNumber(number), guestDetails(nullptr), left(nullptr), right(nullptr) {}
+};
+
+class RoomBST {
+private:
+    RoomNode* root;
+
+    void addRoom(RoomNode*& node, int roomNumber) {
+        if (node == nullptr) {
+            node = new RoomNode(roomNumber);
+        } else if (roomNumber < node->roomNumber) {
+            addRoom(node->left, roomNumber);
+        } else if (roomNumber > node->roomNumber) {
+            addRoom(node->right, roomNumber);
+        }
+    }
+
+    RoomNode* findRoom(RoomNode* node, int roomNumber) {
+        if (node == nullptr) return nullptr;
+        if (node->roomNumber == roomNumber) return node;
+        return (roomNumber < node->roomNumber) ? findRoom(node->left, roomNumber) : findRoom(node->right, roomNumber);
+    }
+
+    void showRooms(RoomNode* node, bool booked) {
+        if (node) {
+            showRooms(node->left, booked);
+            if ((booked && node->guestDetails) || (!booked && !node->guestDetails)) {
+                cout << "Room " << node->roomNumber << ": " 
+                     << (node->guestDetails ? "Occupied by " + node->guestDetails->name : "Empty") << endl;
+            }
+            showRooms(node->right, booked);
+        }
+    }
+
+public:
+    RoomBST() : root(nullptr) {}
+
+    void addRoom(int roomNumber) { addRoom(root, roomNumber); }
+    RoomNode* findRoom(int roomNumber) { return findRoom(root, roomNumber); }
+    
+    void showBookedRooms() { showRooms(root, true); }
+    void showUnbookedRooms() { showRooms(root, false); }
+
+    void addGuest(int roomNumber, GuestDetails* details) {
+        RoomNode* room = findRoom(roomNumber);
+        if (room) room->guestDetails = details;
+    }
+
+    void removeGuest(int roomNumber) {
+        RoomNode* room = findRoom(roomNumber);
+        if (room) {
+            delete room->guestDetails; // Free guest details
+            room->guestDetails = nullptr;
+        }
+    }
+};
+
+class HotelSystem {
+private:
+    RoomBST bst;
+
+public:
+    HotelSystem() {
+        for (int floor = 1; floor <= 3; ++floor) {
+            for (int room = 1; room <= 5; ++room) {
+                bst.addRoom(floor * 100 + room); // Rooms 101 to 305
+            }
+        }
+    }
+
+    void addGuest(int roomNumber) {
+        GuestDetails* details = new GuestDetails();
+        cout << "Enter Guest Name: "; cin.ignore(); getline(cin, details->name);
+        cout << "Enter Check-in Date: "; getline(cin, details->checkIn);
+        cout << "Enter Check-out Date: "; getline(cin, details->checkOut);
+        cout << "Enter ID Proof: "; getline(cin, details->idProof);
+        cout << "Enter Age: "; cin >> details->age;
+        cout << "Enter Gender (M/F): "; cin.ignore(); getline(cin, details->gender);
+        bst.addGuest(roomNumber, details);
+        cout << "Guest added successfully!" << endl;
+    }
+
+    void checkoutGuest(int roomNumber) {
+        bst.removeGuest(roomNumber);
+        cout << "Checked out successfully!" << endl;
+    }
+
+    void searchRoom(int roomNumber) {
+        RoomNode* room = bst.findRoom(roomNumber);
+        if (room) {
+            cout << "Room " << roomNumber << " is " 
+                 << (room->guestDetails ? "Occupied by " + room->guestDetails->name : "Empty") << endl;
+        } else {
+            cout << "Room " << roomNumber << " not found." << endl;
+        }
+    }
+
+    void displayBookedRooms() { bst.showBookedRooms(); }
+    void displayUnbookedRooms() { bst.showUnbookedRooms(); }
+};
+
+int main() {
+    HotelSystem hotel;
+    int choice, roomNumber;
+
+    while (true) {
+        cout << "\n--- Hotel Management System ---" << endl;
+        cout << "1. Add Guest to Room" << endl;
+        cout << "2. Checkout Room" << endl;
+        cout << "3. Search Room" << endl;
+        cout << "4. Display Booked Rooms" << endl;
+        cout << "5. Display Unbooked Rooms" << endl;
+        cout << "6. Exit" << endl;
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                cout << "Enter Room Number: "; cin >> roomNumber;
+                hotel.addGuest(roomNumber);
+                break;
+            case 2:
+                cout << "Enter Room Number to Checkout: "; cin >> roomNumber;
+                hotel.checkoutGuest(roomNumber);
+                break;
+            case 3:
+                cout << "Enter Room Number to Search: "; cin >> roomNumber;
+                hotel.searchRoom(roomNumber);
+                break;
+            case 4:
+                cout << "Booked Rooms:" << endl;
+                hotel.displayBookedRooms();
+                break;
+            case 5:
+                cout << "Unbooked Rooms:" << endl;
+                hotel.displayUnbookedRooms();
+                break;
+            case 6:
+                return 0;
+            default:
+                cout << "Invalid choice. Try again." << endl;
+        }
+    }
+
+    return 0;
+}
